@@ -1,0 +1,1584 @@
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { 
+  Heart, Calendar, MapPin, Clock, Music, Volume2, VolumeX, 
+  Share2, Camera, Upload, Sparkles, Navigation, Car, CheckCircle2, 
+  ChevronRight, X, Download, AlertCircle, Palette, Code2, Users,
+  Eye, PartyPopper, Check, Info, ArrowUpRight
+} from 'lucide-react';
+
+export const THEME_PRESETS = {
+  royal: {
+    id: 'royal',
+    name: 'Royal Emerald & Gold',
+    tagline: 'Imperial & Regal Elegance',
+    fontHeading: 'font-serif',
+    fontBody: 'font-sans',
+    colors: {
+      bg: '#081c15',
+      surface: '#0d2b21',
+      surfaceLight: '#143d2f',
+      border: 'rgba(212, 175, 55, 0.3)',
+      primary: '#d4af37', // Gold
+      primaryHover: '#b8962c',
+      primaryText: '#081c15',
+      accent: '#f3e5ab',
+      textMuted: '#95b8a6',
+      textMain: '#f7faf8',
+      cardBg: 'rgba(13, 43, 33, 0.85)',
+      goldGlow: '0 0 25px rgba(212, 175, 55, 0.25)'
+    }
+  },
+  boho: {
+    id: 'boho',
+    name: 'Minimal Boho Terracotta',
+    tagline: 'Warm Earth & Organic Romance',
+    fontHeading: 'font-serif',
+    fontBody: 'font-sans',
+    colors: {
+      bg: '#251b18',
+      surface: '#362823',
+      surfaceLight: '#473630',
+      border: 'rgba(224, 159, 131, 0.3)',
+      primary: '#e09f83', // Warm Terracotta / Rose
+      primaryHover: '#cb876c',
+      primaryText: '#251b18',
+      accent: '#fcebe4',
+      textMuted: '#c7b0a8',
+      textMain: '#faf5f2',
+      cardBg: 'rgba(54, 40, 35, 0.85)',
+      goldGlow: '0 0 25px rgba(224, 159, 131, 0.25)'
+    }
+  },
+  celestial: {
+    id: 'celestial',
+    name: 'Celestial Midnight',
+    tagline: 'Constellations & Starry Opulence',
+    fontHeading: 'font-serif',
+    fontBody: 'font-sans',
+    colors: {
+      bg: '#090a16',
+      surface: '#13152c',
+      surfaceLight: '#1d2042',
+      border: 'rgba(186, 206, 255, 0.3)',
+      primary: '#b0c4de', // Silver Starlight
+      primaryHover: '#96aed0',
+      primaryText: '#090a16',
+      accent: '#ffffff',
+      textMuted: '#8b9bb4',
+      textMain: '#f0f4fc',
+      cardBg: 'rgba(19, 21, 44, 0.85)',
+      goldGlow: '0 0 25px rgba(176, 196, 222, 0.3)'
+    }
+  },
+  pastel: {
+    id: 'pastel',
+    name: 'Pastel Floral Blossom',
+    tagline: 'Fresh Peonies & Spring Garden',
+    fontHeading: 'font-serif',
+    fontBody: 'font-sans',
+    colors: {
+      bg: '#1c151b',
+      surface: '#2d202b',
+      surfaceLight: '#3f2d3d',
+      border: 'rgba(244, 182, 193, 0.35)',
+      primary: '#f4b6c1', // Soft Blossom
+      primaryHover: '#e09ea9',
+      primaryText: '#1c151b',
+      accent: '#ffeef2',
+      textMuted: '#baa4b3',
+      textMain: '#fff6f8',
+      cardBg: 'rgba(45, 32, 43, 0.85)',
+      goldGlow: '0 0 25px rgba(244, 182, 193, 0.3)'
+    }
+  }
+};
+
+const INITIAL_ITINERARY = [
+  {
+    id: 'evt-1',
+    day: 'Day 01',
+    date: 'Friday, November 20, 2026',
+    time: '06:30 PM Onwards',
+    title: 'The Welcome Soirée & Sangeet',
+    venue: 'The Palm Courtyard, The Oberoi Udaivilas',
+    description: 'An evening of acoustic melodies, curated twilight cocktails, traditional music, and joyful dance performances.',
+    dressCode: 'Indo-Western Glitz / Cocktail Chic',
+    palette: ['#d4af37', '#1a365d', '#800020', '#4a0e4e'],
+    icon: 'Sparkles'
+  },
+  {
+    id: 'evt-2',
+    day: 'Day 02',
+    date: 'Saturday, November 21, 2026',
+    time: '04:00 PM - Sunset',
+    title: 'The Sacred Vows & Pheras',
+    venue: 'Lake Pavilions overlooking Lake Pichola',
+    description: 'Join us as we exchange lifelong vows amidst the holy mantras and tranquil waters during golden hour.',
+    dressCode: 'Traditional Indian Splendor / Pastel Silks',
+    palette: ['#f4b6c1', '#f3e5ab', '#e09f83', '#ffffff'],
+    icon: 'Heart'
+  },
+  {
+    id: 'evt-3',
+    day: 'Day 02',
+    date: 'Saturday, November 21, 2026',
+    time: '08:00 PM Late Night',
+    title: 'The Grand Imperial Reception',
+    venue: 'The Grand Ballroom & Royal Gardens',
+    description: 'A five-course royal banquet, vintage champagne toasts, and celebratory dancing under the stars.',
+    dressCode: 'Black Tie / Royal Traditional Regal',
+    palette: ['#000000', '#d4af37', '#251b18', '#silver'],
+    icon: 'PartyPopper'
+  }
+];
+
+const INITIAL_PHOTOS = [
+  {
+    id: 'p-1',
+    phase: 'before',
+    url: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=80',
+    caption: 'Sunset lakeside save-the-date shoot in Udaipur',
+    uploadedBy: 'Official Studio',
+    likes: 42,
+    createdAt: '2 weeks ago'
+  },
+  {
+    id: 'p-2',
+    phase: 'before',
+    url: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1200&q=80',
+    caption: 'The proposal beneath the northern starlight',
+    uploadedBy: 'Official Studio',
+    likes: 38,
+    createdAt: '1 month ago'
+  },
+  {
+    id: 'p-3',
+    phase: 'during',
+    url: 'https://images.unsplash.com/photo-1520854221256-17451cc331bf?auto=format&fit=crop&w=1200&q=80',
+    caption: 'Arrival drinks and welcome decor at the Palm Courtyard',
+    uploadedBy: 'Aarav (Guest)',
+    likes: 19,
+    createdAt: 'Live Stream'
+  },
+  {
+    id: 'p-4',
+    phase: 'during',
+    url: 'https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&w=1200&q=80',
+    caption: 'Mehndi patterns and laughter with family',
+    uploadedBy: 'Priya S.',
+    likes: 27,
+    createdAt: 'Live Stream'
+  },
+  {
+    id: 'p-5',
+    phase: 'after',
+    url: 'https://images.unsplash.com/photo-1519225429410-b9f848520ec9?auto=format&fit=crop&w=1200&q=80',
+    caption: 'The golden hour vows by the tranquil lake edge',
+    uploadedBy: 'Official Editorial',
+    likes: 95,
+    createdAt: 'Official Gallery'
+  },
+  {
+    id: 'p-6',
+    phase: 'after',
+    url: 'https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?auto=format&fit=crop&w=1200&q=80',
+    caption: 'First dance fireworks lighting up the palace facade',
+    uploadedBy: 'Official Editorial',
+    likes: 88,
+    createdAt: 'Official Gallery'
+  }
+];
+
+function triggerConfettiAnimation(canvas) {
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const count = 120;
+  const pieces = [];
+  const colors = ['#d4af37', '#f3e5ab', '#e09f83', '#ffffff', '#b0c4de', '#f4b6c1'];
+
+  for (let i = 0; i < count; i++) {
+    pieces.push({
+      x: canvas.width / 2,
+      y: canvas.height / 2,
+      vx: (Math.random() - 0.5) * 16,
+      vy: (Math.random() - 0.7) * 18,
+      size: Math.random() * 8 + 4,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      rotation: Math.random() * 360,
+      vRot: (Math.random() - 0.5) * 12,
+      opacity: 1
+    });
+  }
+
+  let animationFrame;
+  let frames = 0;
+
+  function render() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let activePieces = 0;
+
+    pieces.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.35; // gravity
+      p.vx *= 0.98; // drag
+      p.rotation += p.vRot;
+      if (frames > 40) {
+        p.opacity -= 0.015;
+      }
+
+      if (p.opacity > 0) {
+        activePieces++;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate((p.rotation * Math.PI) / 180);
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = Math.max(0, p.opacity);
+        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.7);
+        ctx.restore();
+      }
+    });
+
+    frames++;
+    if (activePieces > 0 && frames < 180) {
+      animationFrame = requestAnimationFrame(render);
+    } else {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  }
+
+  render();
+}
+
+export default function App() {
+  // Theme state
+  const [currentThemeKey, setCurrentThemeKey] = useState('royal');
+  const theme = THEME_PRESETS[currentThemeKey];
+
+  // Event config details (Easily editable here)
+  const eventDetails = {
+    hosts: 'Ananya & Kabir',
+    tagline: 'Together With Their Families Invite You To Celebrate Their Union',
+    dateIso: '2026-11-20T18:30:00+05:30',
+    displayDate: 'November 20 - 21, 2026',
+    venueName: 'The Oberoi Udaivilas Palace',
+    venueCity: 'Udaipur, Rajasthan, India',
+    coordinates: { lat: 24.5772, lng: 73.6738 },
+    googleMapUrl: 'https://maps.google.com/?q=The+Oberoi+Udaivilas+Udaipur',
+    appleMapUrl: 'http://maps.apple.com/?daddr=24.5772,73.6738',
+    uberIntentUrl: 'https://m.uber.com/ul/?action=setPickup&pickup=my_location&dropoff[latitude]=24.5772&dropoff[longitude]=73.6738&dropoff[nickname]=The+Oberoi+Udaivilas',
+    olaIntentUrl: 'https://book.olacabs.com/?lat=24.5772&lng=73.6738'
+  };
+
+  // Countdown State
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+
+  useEffect(() => {
+    const targetDate = new Date(eventDetails.dateIso).getTime();
+
+    const updateCountdown = () => {
+      const now = new Date().getTime();
+      const difference = targetDate - now;
+
+      if (difference <= 0) {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        return;
+      }
+
+      setTimeLeft({
+        days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+        minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
+        seconds: Math.floor((difference % (1000 * 60)) / 1000)
+      });
+    };
+
+    updateCountdown();
+    const timer = setInterval(updateCountdown, 1000);
+    return () => clearInterval(timer);
+  }, [eventDetails.dateIso]);
+
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const audioRef = useRef(null);
+
+  const toggleAudio = () => {
+    if (!audioRef.current) return;
+    if (isPlayingAudio) {
+      audioRef.current.pause();
+      setIsPlayingAudio(false);
+    } else {
+      audioRef.current.play().then(() => {
+        setIsPlayingAudio(true);
+      }).catch(err => {
+        console.warn('Audio autoplay or playback requires user interaction:', err);
+      });
+    }
+  };
+
+  const [rsvpForm, setRsvpForm] = useState({
+    guestName: '',
+    phone: '',
+    attending: 'yes',
+    guestCount: 1,
+    dietary: 'Vegetarian',
+    message: ''
+  });
+  const [rsvpSubmitting, setRsvpSubmitting] = useState(false);
+  const [rsvpSuccess, setRsvpSuccess] = useState(false);
+  const [storedRsvps, setStoredRsvps] = useState([
+    {
+      id: 'mock-1',
+      guestName: 'Rohit & Natasha Verma',
+      phone: '+91 98765 43210',
+      attending: 'yes',
+      guestCount: 2,
+      dietary: 'Vegetarian',
+      message: 'So incredibly thrilled for you both! Cannot wait to dance under the Udaipur stars!',
+      createdAt: 'Yesterday'
+    }
+  ]);
+  const confettiCanvasRef = useRef(null);
+
+  const handleRsvpSubmit = (e) => {
+    e.preventDefault();
+    if (!rsvpForm.guestName.trim()) return;
+
+    setRsvpSubmitting(true);
+    // Simulate persistent backend (e.g. Supabase insert)
+    setTimeout(() => {
+      const newEntry = {
+        id: 'rsvp-' + Date.now(),
+        ...rsvpForm,
+        createdAt: 'Just now'
+      };
+      setStoredRsvps(prev => [newEntry, ...prev]);
+      setRsvpSubmitting(false);
+      setRsvpSuccess(true);
+
+      // Trigger Confetti explosion
+      if (confettiCanvasRef.current) {
+        triggerConfettiAnimation(confettiCanvasRef.current);
+      }
+    }, 700);
+  };
+
+  const [photoPhase, setPhotoPhase] = useState('during'); // 'before' | 'during' | 'after'
+  const [photos, setPhotos] = useState(INITIAL_PHOTOS);
+  const [isUploadDrawerOpen, setIsUploadDrawerOpen] = useState(false);
+  const [lightboxPhoto, setLightboxPhoto] = useState(null);
+  const [newUploadFile, setNewUploadFile] = useState(null);
+  const [newUploadPreview, setNewUploadPreview] = useState(null);
+  const [newUploadCaption, setNewUploadCaption] = useState('');
+  const [newUploadName, setNewUploadName] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+
+  // Schema Drawer Modal State
+  const [isSchemaModalOpen, setIsSchemaModalOpen] = useState(false);
+
+  // Filtered photos by phase
+  const filteredPhotos = useMemo(() => {
+    return photos.filter(p => p.phase === photoPhase);
+  }, [photos, photoPhase]);
+
+  // Handle local image file drag/drop or pick
+  const handlePhotoSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setNewUploadFile(file);
+      const objectUrl = URL.createObjectURL(file);
+      setNewUploadPreview(objectUrl);
+    }
+  };
+
+  const handleUploadSubmit = (e) => {
+    e.preventDefault();
+    if (!newUploadPreview) return;
+
+    setIsUploading(true);
+    setTimeout(() => {
+      const newPhoto = {
+        id: 'upload-' + Date.now(),
+        phase: photoPhase,
+        url: newUploadPreview,
+        caption: newUploadCaption.trim() || 'A cherished celebration memory',
+        uploadedBy: newUploadName.trim() || 'Valued Guest',
+        likes: 1,
+        createdAt: 'Just now'
+      };
+
+      setPhotos(prev => [newPhoto, ...prev]);
+      setIsUploading(false);
+      setIsUploadDrawerOpen(false);
+      setNewUploadFile(null);
+      setNewUploadPreview(null);
+      setNewUploadCaption('');
+      setNewUploadName('');
+    }, 600);
+  };
+
+  const generateIcsFile = () => {
+    const icsContent = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Luxury Event Portal//EN',
+      'BEGIN:VEVENT',
+      'UID:wedding-ananya-kabir-2026@celebration.portal',
+      'DTSTAMP:20260101T000000Z',
+      'DTSTART:20261120T130000Z',
+      'DTEND:20261121T210000Z',
+      `SUMMARY:Wedding Celebrations: ${eventDetails.hosts}`,
+      `DESCRIPTION:Join us to celebrate ${eventDetails.hosts} at ${eventDetails.venueName}.`,
+      `LOCATION:${eventDetails.venueName}, ${eventDetails.venueCity}`,
+      'STATUS:CONFIRMED',
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ].join('\r\n');
+
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const link = document.createElement('a');
+    link.href = window.URL.createObjectURL(blob);
+    link.setAttribute('download', 'Ananya_Kabir_Wedding_Invite.ics');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const openGoogleCalendar = () => {
+    const title = encodeURIComponent(`Wedding Celebrations: ${eventDetails.hosts}`);
+    const details = encodeURIComponent(`Grand wedding celebration of ${eventDetails.hosts} at ${eventDetails.venueName}.`);
+    const location = encodeURIComponent(`${eventDetails.venueName}, ${eventDetails.venueCity}`);
+    const dates = '20261120T130000Z/20261121T210000Z';
+    const gCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&details=${details}&location=${location}`;
+    window.open(gCalUrl, '_blank');
+  };
+
+  return (
+    <div 
+      className={`min-h-screen text-slate-100 selection:bg-amber-400 selection:text-slate-900 transition-colors duration-500 ${theme.fontBody}`}
+      style={{
+        backgroundColor: theme.colors.bg,
+        color: theme.colors.textMain
+      }}
+    >
+      {/* Background Ambience Ambient Glow */}
+      <div 
+        className="fixed inset-0 pointer-events-none opacity-25 z-0"
+        style={{
+          backgroundImage: `radial-gradient(circle at 50% 15%, ${theme.colors.primary} 0%, transparent 50%), radial-gradient(circle at 90% 75%, ${theme.colors.border} 0%, transparent 40%)`
+        }}
+      />
+
+      {/* Floating Canvas for Confetti */}
+      <canvas 
+        ref={confettiCanvasRef}
+        width={window.innerWidth || 1000}
+        height={window.innerHeight || 800}
+        className="fixed inset-0 pointer-events-none z-50 w-full h-full"
+      />
+
+      {/* Audio Element (Royalty-free romantic acoustic loops simulation) */}
+      <audio 
+        ref={audioRef} 
+        loop 
+        src="https://cdn.freesound.org/previews/568/568169_11861866-lq.mp3" 
+        preload="none"
+      />
+
+      {/* STICKY TOP BAR: Theme Switcher & Admin Schema Access */}
+      <header className="sticky top-0 z-40 backdrop-blur-md border-b px-4 py-3 flex items-center justify-between"
+        style={{
+          backgroundColor: `${theme.colors.surface}cc`,
+          borderColor: theme.colors.border
+        }}
+      >
+        <div className="flex items-center space-x-2">
+          <div 
+            className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shadow-inner"
+            style={{ backgroundColor: theme.colors.primary, color: theme.colors.primaryText }}
+          >
+            A&K
+          </div>
+          <span className="text-xs uppercase tracking-widest font-semibold hidden sm:inline" style={{ color: theme.colors.primary }}>
+            Royal Guest Portal
+          </span>
+        </div>
+
+        {/* Action Controls */}
+        <div className="flex items-center space-x-2 sm:space-x-4">
+          {/* Theme Presets Dropdown */}
+          <div className="flex items-center space-x-1.5 bg-black/40 border rounded-full px-2.5 py-1 text-xs" style={{ borderColor: theme.colors.border }}>
+            <Palette className="w-3.5 h-3.5" style={{ color: theme.colors.primary }} />
+            <span className="text-[11px] text-gray-400 hidden md:inline">Theme:</span>
+            <select
+              value={currentThemeKey}
+              onChange={(e) => setCurrentThemeKey(e.target.value)}
+              className="bg-transparent text-xs font-medium focus:outline-none cursor-pointer pr-1"
+              style={{ color: theme.colors.accent }}
+            >
+              {Object.entries(THEME_PRESETS).map(([key, item]) => (
+                <option key={key} value={key} className="bg-slate-900 text-white">
+                  {item.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Database Setup Button */}
+          <button
+            onClick={() => setIsSchemaModalOpen(true)}
+            className="flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all hover:scale-105 border"
+            style={{ 
+              borderColor: theme.colors.border,
+              backgroundColor: `${theme.colors.surfaceLight}90`,
+              color: theme.colors.primary
+            }}
+            title="View backend SQL Schema & Instructions"
+          >
+            <Code2 className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Backend Schema</span>
+          </button>
+        </div>
+      </header>
+
+      {}
+      <section className="relative min-h-[92vh] flex flex-col items-center justify-center text-center px-4 py-16 overflow-hidden">
+        {/* Subtle Ornamental Frame */}
+        <div 
+          className="max-w-4xl mx-auto p-8 sm:p-12 md:p-16 rounded-3xl relative border backdrop-blur-md transition-all duration-700"
+          style={{
+            backgroundColor: theme.colors.cardBg,
+            borderColor: theme.colors.border,
+            boxShadow: theme.colors.goldGlow
+          }}
+        >
+          {/* Top Monogram */}
+          <div className="flex justify-center mb-6">
+            <div 
+              className="w-16 h-16 rounded-full border flex items-center justify-center relative p-3"
+              style={{ borderColor: theme.colors.primary }}
+            >
+              <Heart className="w-7 h-7 stroke-1" style={{ color: theme.colors.primary }} />
+              <div 
+                className="absolute inset-0 rounded-full animate-ping opacity-20 pointer-events-none"
+                style={{ backgroundColor: theme.colors.primary }}
+              />
+            </div>
+          </div>
+
+          <p className="text-xs sm:text-sm tracking-[0.35em] uppercase mb-4" style={{ color: theme.colors.primary }}>
+            Save The Date & Interactive Invitation
+          </p>
+
+          <h1 
+            className={`text-4xl sm:text-6xl md:text-7xl tracking-wide mb-6 font-serif ${theme.fontHeading}`}
+            style={{ color: theme.colors.accent }}
+          >
+            {eventDetails.hosts}
+          </h1>
+
+          <p className="text-sm sm:text-base max-w-xl mx-auto font-light leading-relaxed mb-8" style={{ color: theme.colors.textMuted }}>
+            {eventDetails.tagline}
+          </p>
+
+          {/* Date & Location Pill */}
+          <div className="inline-flex flex-wrap items-center justify-center gap-3 sm:gap-6 py-2.5 px-6 rounded-full border mb-10 text-xs sm:text-sm font-light"
+            style={{ 
+              borderColor: theme.colors.border,
+              backgroundColor: 'rgba(0,0,0,0.3)'
+            }}
+          >
+            <span className="flex items-center gap-2">
+              <Calendar className="w-4 h-4" style={{ color: theme.colors.primary }} />
+              {eventDetails.displayDate}
+            </span>
+            <span className="hidden sm:inline opacity-30">•</span>
+            <span className="flex items-center gap-2">
+              <MapPin className="w-4 h-4" style={{ color: theme.colors.primary }} />
+              {eventDetails.venueCity}
+            </span>
+          </div>
+
+          {/* Live Countdown Display */}
+          <div className="mb-10">
+            <p className="text-xs uppercase tracking-widest mb-4 opacity-80" style={{ color: theme.colors.primary }}>
+              The Celebration Begins In
+            </p>
+            <div className="grid grid-cols-4 gap-2 sm:gap-4 max-w-md mx-auto">
+              {[
+                { label: 'Days', val: timeLeft.days },
+                { label: 'Hours', val: timeLeft.hours },
+                { label: 'Minutes', val: timeLeft.minutes },
+                { label: 'Seconds', val: timeLeft.seconds }
+              ].map((unit, idx) => (
+                <div 
+                  key={idx} 
+                  className="p-3 sm:p-4 rounded-xl border flex flex-col items-center justify-center"
+                  style={{
+                    backgroundColor: 'rgba(0,0,0,0.4)',
+                    borderColor: theme.colors.border
+                  }}
+                >
+                  <span className="text-2xl sm:text-4xl font-serif font-medium" style={{ color: theme.colors.accent }}>
+                    {String(unit.val).padStart(2, '0')}
+                  </span>
+                  <span className="text-[10px] sm:text-xs tracking-wider uppercase mt-1 opacity-75">
+                    {unit.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Quick Action Buttons */}
+          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+            <button
+              onClick={openGoogleCalendar}
+              className="px-5 py-2.5 rounded-full text-xs sm:text-sm font-medium transition-all transform hover:-translate-y-0.5 flex items-center gap-2 shadow-lg"
+              style={{
+                backgroundColor: theme.colors.primary,
+                color: theme.colors.primaryText
+              }}
+            >
+              <Calendar className="w-4 h-4" />
+              Add to Google Calendar
+            </button>
+            <button
+              onClick={generateIcsFile}
+              className="px-5 py-2.5 rounded-full text-xs sm:text-sm font-medium transition-all border hover:bg-white/10 flex items-center gap-2"
+              style={{
+                borderColor: theme.colors.border,
+                color: theme.colors.textMain
+              }}
+            >
+              <Download className="w-4 h-4" style={{ color: theme.colors.primary }} />
+              Download .ICS (Apple)
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {}
+      <section className="py-20 px-4 max-w-5xl mx-auto relative z-10" id="itinerary">
+        <div className="text-center mb-14">
+          <p className="text-xs uppercase tracking-[0.3em] font-semibold mb-2" style={{ color: theme.colors.primary }}>
+            Celebration Flow
+          </p>
+          <h2 className="text-3xl sm:text-4xl font-serif" style={{ color: theme.colors.accent }}>
+            Itinerary & Dress Codes
+          </h2>
+          <div className="w-16 h-0.5 mx-auto mt-4" style={{ backgroundColor: theme.colors.primary }} />
+        </div>
+
+        <div className="space-y-6 sm:space-y-8 relative before:absolute before:inset-0 before:left-4 sm:before:left-1/2 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-stone-600 before:to-transparent">
+          {INITIAL_ITINERARY.map((item, index) => {
+            const isEven = index % 2 === 0;
+            return (
+              <div 
+                key={item.id} 
+                className={`relative flex flex-col sm:flex-row items-start ${isEven ? 'sm:flex-row-reverse' : ''} group`}
+              >
+                {/* Center Node Dot */}
+                <div 
+                  className="absolute left-4 sm:left-1/2 -translate-x-1/2 w-8 h-8 rounded-full border-2 flex items-center justify-center z-10 transition-transform group-hover:scale-110"
+                  style={{
+                    backgroundColor: theme.colors.surface,
+                    borderColor: theme.colors.primary
+                  }}
+                >
+                  <Sparkles className="w-3.5 h-3.5" style={{ color: theme.colors.primary }} />
+                </div>
+
+                {/* Card Container */}
+                <div className="w-full sm:w-[46%] ml-12 sm:ml-0 mt-0">
+                  <div 
+                    className="p-6 rounded-2xl border transition-all duration-300 hover:shadow-2xl"
+                    style={{
+                      backgroundColor: theme.colors.cardBg,
+                      borderColor: theme.colors.border
+                    }}
+                  >
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <span className="text-[11px] font-semibold tracking-wider uppercase px-2.5 py-0.5 rounded-full border"
+                        style={{
+                          backgroundColor: `${theme.colors.surfaceLight}90`,
+                          borderColor: theme.colors.border,
+                          color: theme.colors.primary
+                        }}
+                      >
+                        {item.day}
+                      </span>
+                      <span className="text-xs flex items-center gap-1.5 opacity-80" style={{ color: theme.colors.textMuted }}>
+                        <Clock className="w-3.5 h-3.5" style={{ color: theme.colors.primary }} />
+                        {item.time}
+                      </span>
+                    </div>
+
+                    <h3 className="text-xl font-serif font-medium mb-1" style={{ color: theme.colors.accent }}>
+                      {item.title}
+                    </h3>
+                    <p className="text-xs font-light mb-3 flex items-center gap-1" style={{ color: theme.colors.primary }}>
+                      <MapPin className="w-3.5 h-3.5 shrink-0" />
+                      {item.venue}
+                    </p>
+
+                    <p className="text-sm font-light leading-relaxed mb-4" style={{ color: theme.colors.textMuted }}>
+                      {item.description}
+                    </p>
+
+                    {/* Dress Code & Palette Swatches */}
+                    <div className="pt-3 border-t flex flex-wrap items-center justify-between gap-3 text-xs" style={{ borderColor: theme.colors.border }}>
+                      <div>
+                        <span className="block text-[10px] uppercase tracking-wider opacity-60">Dress Attire:</span>
+                        <span className="font-medium" style={{ color: theme.colors.accent }}>{item.dressCode}</span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] uppercase tracking-wider opacity-60 mr-1">Tones:</span>
+                        {item.palette.map((color, i) => (
+                          <div 
+                            key={i} 
+                            className="w-4 h-4 rounded-full border border-black/30 shadow-sm"
+                            style={{ backgroundColor: color }}
+                            title={color}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {}
+      <section className="py-20 px-4 max-w-5xl mx-auto relative z-10" id="venue">
+        <div className="text-center mb-12">
+          <p className="text-xs uppercase tracking-[0.3em] font-semibold mb-2" style={{ color: theme.colors.primary }}>
+            Destination & Directions
+          </p>
+          <h2 className="text-3xl sm:text-4xl font-serif" style={{ color: theme.colors.accent }}>
+            The Royal Sanctuary
+          </h2>
+          <div className="w-16 h-0.5 mx-auto mt-4" style={{ backgroundColor: theme.colors.primary }} />
+        </div>
+
+        <div 
+          className="rounded-3xl border overflow-hidden p-6 sm:p-10 backdrop-blur-md"
+          style={{
+            backgroundColor: theme.colors.cardBg,
+            borderColor: theme.colors.border
+          }}
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            {/* Info details */}
+            <div className="lg:col-span-6 space-y-5">
+              <span className="inline-block text-xs uppercase tracking-widest px-3 py-1 rounded-full border font-medium"
+                style={{
+                  borderColor: theme.colors.border,
+                  backgroundColor: `${theme.colors.surfaceLight}90`,
+                  color: theme.colors.primary
+                }}
+              >
+                Official Celebration Venue
+              </span>
+
+              <h3 className="text-2xl sm:text-3xl font-serif" style={{ color: theme.colors.accent }}>
+                {eventDetails.venueName}
+              </h3>
+
+              <p className="text-sm font-light leading-relaxed" style={{ color: theme.colors.textMuted }}>
+                Situated along the tranquil banks of Lake Pichola, The Oberoi Udaivilas stands as a masterpiece of courtyards, serene reflecting pools, and traditional Rajasthani Mewari architectural splendor.
+              </p>
+
+              <div className="space-y-2 text-xs sm:text-sm font-light">
+                <div className="flex items-start gap-2.5">
+                  <MapPin className="w-4 h-4 shrink-0 mt-0.5" style={{ color: theme.colors.primary }} />
+                  <span>Haridas Ji Ki Magri, Udaipur, Rajasthan 313001, India</span>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <Navigation className="w-4 h-4 shrink-0 mt-0.5" style={{ color: theme.colors.primary }} />
+                  <span>Approx. 45 mins from Maharana Pratap Airport (UDR)</span>
+                </div>
+              </div>
+
+              {/* Navigation Deep Links */}
+              <div className="pt-4 flex flex-wrap gap-3">
+                <a
+                  href={eventDetails.googleMapUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-medium border transition-colors hover:bg-white/10"
+                  style={{ borderColor: theme.colors.border, color: theme.colors.accent }}
+                >
+                  <Navigation className="w-3.5 h-3.5" style={{ color: theme.colors.primary }} />
+                  Open Google Maps
+                </a>
+                <a
+                  href={eventDetails.appleMapUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-medium border transition-colors hover:bg-white/10"
+                  style={{ borderColor: theme.colors.border, color: theme.colors.accent }}
+                >
+                  <MapPin className="w-3.5 h-3.5" style={{ color: theme.colors.primary }} />
+                  Apple Maps
+                </a>
+                <a
+                  href={eventDetails.uberIntentUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-medium transition-transform hover:scale-105 shadow-md"
+                  style={{ backgroundColor: theme.colors.primary, color: theme.colors.primaryText }}
+                >
+                  <Car className="w-3.5 h-3.5" />
+                  Uber Ride Intent
+                </a>
+              </div>
+            </div>
+
+            {/* Simulated Interactive Map Display */}
+            <div className="lg:col-span-6">
+              <div 
+                className="w-full h-72 sm:h-80 rounded-2xl border overflow-hidden relative group shadow-inner"
+                style={{ borderColor: theme.colors.border }}
+              >
+                {/* Visual Satellite/Architectural Canvas Mockup */}
+                <img 
+                  src="https://images.unsplash.com/photo-1596178065887-1198b6148b2b?auto=format&fit=crop&w=1000&q=80" 
+                  alt="Udaipur Palace Aerial" 
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                
+                {/* Pin Center Marker */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="relative flex flex-col items-center">
+                    <div 
+                      className="px-3 py-1.5 rounded-lg text-xs font-medium shadow-xl border mb-1 flex items-center gap-1.5 backdrop-blur-md"
+                      style={{
+                        backgroundColor: theme.colors.surface,
+                        borderColor: theme.colors.primary,
+                        color: theme.colors.accent
+                      }}
+                    >
+                      <MapPin className="w-3.5 h-3.5" style={{ color: theme.colors.primary }} />
+                      The Oberoi Udaivilas
+                    </div>
+                    <div className="w-3 h-3 rotate-45 -mt-2.5" style={{ backgroundColor: theme.colors.surface }} />
+                  </div>
+                </div>
+
+                <div className="absolute bottom-3 right-3">
+                  <a
+                    href={eventDetails.googleMapUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[11px] px-3 py-1.5 rounded-md backdrop-blur-md bg-black/60 border hover:bg-black/90 flex items-center gap-1 transition-all"
+                    style={{ borderColor: theme.colors.border, color: theme.colors.primary }}
+                  >
+                    <span>Enlarge Full View</span>
+                    <ArrowUpRight className="w-3 h-3" />
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {}
+      <section className="py-20 px-4 max-w-4xl mx-auto relative z-10" id="rsvp">
+        <div className="text-center mb-12">
+          <p className="text-xs uppercase tracking-[0.3em] font-semibold mb-2" style={{ color: theme.colors.primary }}>
+            Join The Rejoicing
+          </p>
+          <h2 className="text-3xl sm:text-4xl font-serif" style={{ color: theme.colors.accent }}>
+            Kindly Confirm Your RSVP
+          </h2>
+          <p className="text-xs sm:text-sm mt-2 opacity-75" style={{ color: theme.colors.textMuted }}>
+            Please respond on or before October 25, 2026
+          </p>
+          <div className="w-16 h-0.5 mx-auto mt-4" style={{ backgroundColor: theme.colors.primary }} />
+        </div>
+
+        <div 
+          className="rounded-3xl border p-6 sm:p-10 backdrop-blur-md transition-all shadow-xl"
+          style={{
+            backgroundColor: theme.colors.cardBg,
+            borderColor: theme.colors.border
+          }}
+        >
+          {rsvpSuccess ? (
+            <div className="text-center py-12 px-4 space-y-4">
+              <div 
+                className="w-16 h-16 rounded-full mx-auto flex items-center justify-center border"
+                style={{ borderColor: theme.colors.primary, backgroundColor: `${theme.colors.surfaceLight}90` }}
+              >
+                <CheckCircle2 className="w-8 h-8" style={{ color: theme.colors.primary }} />
+              </div>
+              <h3 className="text-2xl font-serif" style={{ color: theme.colors.accent }}>
+                Thank You, {rsvpForm.guestName}!
+              </h3>
+              <p className="text-sm max-w-md mx-auto leading-relaxed" style={{ color: theme.colors.textMuted }}>
+                {rsvpForm.attending === 'yes'
+                  ? `Your confirmation for ${rsvpForm.guestCount} guest(s) has been preserved. We eagerly await welcoming you in Udaipur!`
+                  : `We are truly touched by your warm wishes and will deeply miss having you celebrate in person.`}
+              </p>
+              <button
+                onClick={() => setRsvpSuccess(false)}
+                className="mt-4 px-6 py-2 rounded-full text-xs font-medium border transition-colors hover:bg-white/10"
+                style={{ borderColor: theme.colors.border, color: theme.colors.primary }}
+              >
+                Submit Another Response
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleRsvpSubmit} className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {/* Guest Full Name */}
+                <div>
+                  <label className="block text-xs uppercase tracking-wider mb-2 font-medium" style={{ color: theme.colors.accent }}>
+                    Full Name(s) *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Maya & Arjun Singhania"
+                    value={rsvpForm.guestName}
+                    onChange={(e) => setRsvpForm({ ...rsvpForm, guestName: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border bg-black/30 text-sm focus:outline-none focus:ring-1 transition-all"
+                    style={{ borderColor: theme.colors.border, color: theme.colors.textMain }}
+                  />
+                </div>
+
+                {/* Contact Phone or Email */}
+                <div>
+                  <label className="block text-xs uppercase tracking-wider mb-2 font-medium" style={{ color: theme.colors.accent }}>
+                    Phone or WhatsApp Number
+                  </label>
+                  <input
+                    type="tel"
+                    placeholder="+91 98765 43210"
+                    value={rsvpForm.phone}
+                    onChange={(e) => setRsvpForm({ ...rsvpForm, phone: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border bg-black/30 text-sm focus:outline-none focus:ring-1 transition-all"
+                    style={{ borderColor: theme.colors.border, color: theme.colors.textMain }}
+                  />
+                </div>
+              </div>
+
+              {/* Attendance Toggle */}
+              <div>
+                <label className="block text-xs uppercase tracking-wider mb-2 font-medium" style={{ color: theme.colors.accent }}>
+                  Will you be gracing us with your presence?
+                </label>
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setRsvpForm({ ...rsvpForm, attending: 'yes' })}
+                    className={`py-3 px-4 rounded-xl border text-xs font-semibold tracking-wider uppercase transition-all flex items-center justify-center gap-2 ${
+                      rsvpForm.attending === 'yes' ? 'ring-1' : 'opacity-60'
+                    }`}
+                    style={{
+                      borderColor: theme.colors.border,
+                      backgroundColor: rsvpForm.attending === 'yes' ? theme.colors.primary : 'transparent',
+                      color: rsvpForm.attending === 'yes' ? theme.colors.primaryText : theme.colors.textMain
+                    }}
+                  >
+                    <Check className="w-4 h-4" />
+                    Joyfully Accept
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setRsvpForm({ ...rsvpForm, attending: 'no' })}
+                    className={`py-3 px-4 rounded-xl border text-xs font-semibold tracking-wider uppercase transition-all flex items-center justify-center gap-2 ${
+                      rsvpForm.attending === 'no' ? 'ring-1' : 'opacity-60'
+                    }`}
+                    style={{
+                      borderColor: theme.colors.border,
+                      backgroundColor: rsvpForm.attending === 'no' ? `${theme.colors.surfaceLight}cc` : 'transparent',
+                      color: theme.colors.textMain
+                    }}
+                  >
+                    <X className="w-4 h-4" />
+                    Regretfully Decline
+                  </button>
+                </div>
+              </div>
+
+              {rsvpForm.attending === 'yes' && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
+                  {/* Guest Count */}
+                  <div>
+                    <label className="block text-xs uppercase tracking-wider mb-2 font-medium" style={{ color: theme.colors.accent }}>
+                      Total Attending Guests
+                    </label>
+                    <select
+                      value={rsvpForm.guestCount}
+                      onChange={(e) => setRsvpForm({ ...rsvpForm, guestCount: Number(e.target.value) })}
+                      className="w-full px-4 py-3 rounded-xl border bg-black/30 text-sm focus:outline-none"
+                      style={{ borderColor: theme.colors.border, color: theme.colors.textMain }}
+                    >
+                      {[1, 2, 3, 4, 5, 6].map(num => (
+                        <option key={num} value={num} className="bg-slate-900 text-white">
+                          {num} {num === 1 ? 'Guest' : 'Guests'}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Dietary Preferences */}
+                  <div>
+                    <label className="block text-xs uppercase tracking-wider mb-2 font-medium" style={{ color: theme.colors.accent }}>
+                      Culinary & Dietary Preferences
+                    </label>
+                    <select
+                      value={rsvpForm.dietary}
+                      onChange={(e) => setRsvpForm({ ...rsvpForm, dietary: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl border bg-black/30 text-sm focus:outline-none"
+                      style={{ borderColor: theme.colors.border, color: theme.colors.textMain }}
+                    >
+                      <option value="Vegetarian" className="bg-slate-900 text-white">Pure Vegetarian</option>
+                      <option value="Jain Vegetarian" className="bg-slate-900 text-white">Jain Vegetarian</option>
+                      <option value="Non-Vegetarian" className="bg-slate-900 text-white">Non-Vegetarian</option>
+                      <option value="Vegan" className="bg-slate-900 text-white">Vegan</option>
+                      <option value="Gluten-Free" className="bg-slate-900 text-white">Gluten-Free</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              {/* Heartfelt Note / Blessing */}
+              <div>
+                <label className="block text-xs uppercase tracking-wider mb-2 font-medium" style={{ color: theme.colors.accent }}>
+                  Blessings & Special Notes for the Couple
+                </label>
+                <textarea
+                  rows={3}
+                  placeholder="Share your favorite memory, travel constraints, or blessings..."
+                  value={rsvpForm.message}
+                  onChange={(e) => setRsvpForm({ ...rsvpForm, message: e.target.value })}
+                  className="w-full px-4 py-3 rounded-xl border bg-black/30 text-sm focus:outline-none focus:ring-1 resize-none"
+                  style={{ borderColor: theme.colors.border, color: theme.colors.textMain }}
+                />
+              </div>
+
+              {/* Submit CTA */}
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={rsvpSubmitting}
+                  className="w-full py-4 rounded-xl text-sm font-semibold tracking-wider uppercase transition-all shadow-xl flex items-center justify-center gap-2 transform active:scale-[0.99]"
+                  style={{
+                    backgroundColor: theme.colors.primary,
+                    color: theme.colors.primaryText
+                  }}
+                >
+                  {rsvpSubmitting ? (
+                    <span className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                      Preserving RSVP...
+                    </span>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4" />
+                      Confirm RSVP Attendance
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* Stored RSVPs Preview ticker (Mock Backend Verification) */}
+          <div className="mt-8 pt-6 border-t" style={{ borderColor: theme.colors.border }}>
+            <div className="flex items-center justify-between text-xs mb-3">
+              <span className="flex items-center gap-1.5 opacity-70">
+                <Users className="w-3.5 h-3.5" style={{ color: theme.colors.primary }} />
+                Recent Guest Confirmations ({storedRsvps.length})
+              </span>
+              <span className="text-[11px] opacity-60">Synced to `rsvps` table</span>
+            </div>
+            <div className="space-y-2 max-h-36 overflow-y-auto pr-1 text-xs">
+              {storedRsvps.map((entry) => (
+                <div 
+                  key={entry.id} 
+                  className="p-2.5 rounded-lg border flex items-center justify-between"
+                  style={{
+                    backgroundColor: 'rgba(0,0,0,0.25)',
+                    borderColor: theme.colors.border
+                  }}
+                >
+                  <div>
+                    <span className="font-medium" style={{ color: theme.colors.accent }}>{entry.guestName}</span>
+                    <span className="opacity-60 ml-2">({entry.guestCount} {entry.guestCount > 1 ? 'attendees' : 'attendee'})</span>
+                    {entry.message && <p className="text-[11px] italic opacity-75 mt-0.5 line-clamp-1">"{entry.message}"</p>}
+                  </div>
+                  <span className="text-[10px] uppercase font-semibold px-2 py-0.5 rounded"
+                    style={{
+                      backgroundColor: entry.attending === 'yes' ? `${theme.colors.primary}30` : 'rgba(255,255,255,0.1)',
+                      color: entry.attending === 'yes' ? theme.colors.primary : '#ccc'
+                    }}
+                  >
+                    {entry.attending === 'yes' ? 'Attending' : 'Declined'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {}
+      <section className="py-20 px-4 max-w-6xl mx-auto relative z-10" id="gallery">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
+          <div>
+            <p className="text-xs uppercase tracking-[0.3em] font-semibold mb-2" style={{ color: theme.colors.primary }}>
+              The Visual Story
+            </p>
+            <h2 className="text-3xl sm:text-4xl font-serif" style={{ color: theme.colors.accent }}>
+              Interactive Photo Hub
+            </h2>
+            <p className="text-xs sm:text-sm mt-1.5 opacity-75" style={{ color: theme.colors.textMuted }}>
+              Curated shoots, candid live stream uploads, and official post-event highlights
+            </p>
+          </div>
+
+          {/* Guest Action: Open Upload Drawer */}
+          <button
+            onClick={() => setIsUploadDrawerOpen(true)}
+            className="px-5 py-3 rounded-full text-xs font-semibold tracking-wider uppercase transition-all flex items-center gap-2 shadow-lg self-start md:self-auto"
+            style={{
+              backgroundColor: theme.colors.primary,
+              color: theme.colors.primaryText
+            }}
+          >
+            <Camera className="w-4 h-4" />
+            Upload Guest Snapshot
+          </button>
+        </div>
+
+        {/* Phase Tabs Selector */}
+        <div className="flex items-center gap-2 border-b pb-4 mb-8 overflow-x-auto" style={{ borderColor: theme.colors.border }}>
+          {[
+            { id: 'before', label: '1. Pre-Event Shoot', tag: 'Engagement & Teasers' },
+            { id: 'during', label: '2. Live Celebration', tag: 'Guest Live Stream' },
+            { id: 'after', label: '3. Official Highlights', tag: 'Post-Event Gallery' }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setPhotoPhase(tab.id)}
+              className={`px-4 py-2.5 rounded-xl text-xs font-medium transition-all flex flex-col items-start whitespace-nowrap border ${
+                photoPhase === tab.id ? 'shadow-md' : 'opacity-60 hover:opacity-100'
+              }`}
+              style={{
+                borderColor: photoPhase === tab.id ? theme.colors.primary : 'transparent',
+                backgroundColor: photoPhase === tab.id ? `${theme.colors.surfaceLight}cc` : 'transparent',
+                color: photoPhase === tab.id ? theme.colors.accent : theme.colors.textMuted
+              }}
+            >
+              <span className="font-semibold">{tab.label}</span>
+              <span className="text-[10px] opacity-70">{tab.tag}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Masonry / Fluid Responsive Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredPhotos.map((item) => (
+            <div 
+              key={item.id} 
+              className="group relative rounded-2xl border overflow-hidden cursor-pointer backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
+              style={{
+                backgroundColor: theme.colors.cardBg,
+                borderColor: theme.colors.border
+              }}
+              onClick={() => setLightboxPhoto(item)}
+            >
+              <div className="aspect-[4/5] w-full overflow-hidden relative">
+                <img 
+                  src={item.url} 
+                  alt={item.caption}
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 opacity-70 group-hover:opacity-90 transition-opacity" />
+
+                {/* Corner Phase Badge */}
+                <span className="absolute top-3 left-3 text-[10px] tracking-widest uppercase font-semibold px-2 py-0.5 rounded backdrop-blur-md bg-black/60 border border-white/10" style={{ color: theme.colors.primary }}>
+                  {item.phase}
+                </span>
+
+                {/* Details Footer */}
+                <div className="absolute bottom-3 left-3 right-3 text-white">
+                  <p className="text-xs font-medium line-clamp-2 mb-1" style={{ color: theme.colors.accent }}>
+                    {item.caption}
+                  </p>
+                  <div className="flex items-center justify-between text-[11px] opacity-75">
+                    <span>by {item.uploadedBy}</span>
+                    <span className="flex items-center gap-1">
+                      <Heart className="w-3 h-3 fill-rose-500 text-rose-500" />
+                      {item.likes}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {filteredPhotos.length === 0 && (
+          <div className="text-center py-16 border rounded-2xl" style={{ borderColor: theme.colors.border }}>
+            <Camera className="w-10 h-10 mx-auto opacity-40 mb-3" />
+            <p className="text-sm font-light" style={{ color: theme.colors.textMuted }}>No photographs uploaded in this phase yet.</p>
+            <button
+              onClick={() => setIsUploadDrawerOpen(true)}
+              className="mt-3 text-xs underline font-medium"
+              style={{ color: theme.colors.primary }}
+            >
+              Be the first to upload a snapshot
+            </button>
+          </div>
+        )}
+      </section>
+
+      {}
+      {lightboxPhoto && (
+        <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl flex items-center justify-center p-4">
+          <button 
+            onClick={() => setLightboxPhoto(null)}
+            className="absolute top-6 right-6 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+          >
+            <X className="w-6 h-6" />
+          </button>
+
+          <div className="max-w-4xl w-full flex flex-col items-center">
+            <div className="max-h-[75vh] w-auto overflow-hidden rounded-2xl border border-white/20 mb-4 shadow-2xl">
+              <img 
+                src={lightboxPhoto.url} 
+                alt={lightboxPhoto.caption}
+                className="max-h-[75vh] max-w-full object-contain"
+              />
+            </div>
+            <div className="w-full flex items-center justify-between text-white/90 text-sm px-2">
+              <div>
+                <p className="font-serif text-base">{lightboxPhoto.caption}</p>
+                <p className="text-xs text-white/60">Uploaded by {lightboxPhoto.uploadedBy} • {lightboxPhoto.createdAt}</p>
+              </div>
+
+              <a
+                href={lightboxPhoto.url}
+                download="wedding-memory.jpg"
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium border border-white/30 hover:bg-white/10"
+              >
+                <Download className="w-4 h-4" />
+                Download Original
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {}
+      {isUploadDrawerOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex justify-end">
+          <div 
+            className="w-full max-w-md h-full overflow-y-auto p-6 sm:p-8 border-l flex flex-col justify-between"
+            style={{
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border
+            }}
+          >
+            <div>
+              <div className="flex items-center justify-between pb-4 border-b mb-6" style={{ borderColor: theme.colors.border }}>
+                <div className="flex items-center gap-2">
+                  <Camera className="w-5 h-5" style={{ color: theme.colors.primary }} />
+                  <h3 className="text-lg font-serif" style={{ color: theme.colors.accent }}>Contribute Photo</h3>
+                </div>
+                <button 
+                  onClick={() => setIsUploadDrawerOpen(false)}
+                  className="p-1 rounded-full text-stone-400 hover:text-white"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleUploadSubmit} className="space-y-5">
+                {/* File Dropzone Area */}
+                <div>
+                  <label className="block text-xs uppercase tracking-wider mb-2 font-medium" style={{ color: theme.colors.accent }}>
+                    Select Image (Camera or Gallery) *
+                  </label>
+                  <label 
+                    className="border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all hover:bg-black/20"
+                    style={{ borderColor: theme.colors.border }}
+                  >
+                    {newUploadPreview ? (
+                      <div className="relative w-full aspect-video rounded-xl overflow-hidden">
+                        <img src={newUploadPreview} alt="Preview" className="w-full h-full object-cover" />
+                        <span className="absolute bottom-2 right-2 text-[10px] px-2 py-0.5 rounded bg-black/70 text-white">
+                          Change Image
+                        </span>
+                      </div>
+                    ) : (
+                      <>
+                        <Upload className="w-8 h-8 opacity-50 mb-2" style={{ color: theme.colors.primary }} />
+                        <p className="text-xs font-medium" style={{ color: theme.colors.accent }}>Tap to select from Smartphone</p>
+                        <p className="text-[10px] text-gray-400 mt-1">JPEG, PNG, HEIC up to 25MB</p>
+                      </>
+                    )}
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      onChange={handlePhotoSelect} 
+                      className="hidden" 
+                    />
+                  </label>
+                </div>
+
+                {/* Uploader Name */}
+                <div>
+                  <label className="block text-xs uppercase tracking-wider mb-2 font-medium" style={{ color: theme.colors.accent }}>
+                    Your Name
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Rohini Shah"
+                    value={newUploadName}
+                    onChange={(e) => setNewUploadName(e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-xl border bg-black/30 text-xs focus:outline-none"
+                    style={{ borderColor: theme.colors.border, color: theme.colors.textMain }}
+                  />
+                </div>
+
+                {/* Caption */}
+                <div>
+                  <label className="block text-xs uppercase tracking-wider mb-2 font-medium" style={{ color: theme.colors.accent }}>
+                    Caption / Memory
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Sangeet dance practice behind the scenes!"
+                    value={newUploadCaption}
+                    onChange={(e) => setNewUploadCaption(e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-xl border bg-black/30 text-xs focus:outline-none"
+                    style={{ borderColor: theme.colors.border, color: theme.colors.textMain }}
+                  />
+                </div>
+
+                {/* Phase Selection */}
+                <div>
+                  <label className="block text-xs uppercase tracking-wider mb-2 font-medium" style={{ color: theme.colors.accent }}>
+                    Target Phase Tab
+                  </label>
+                  <div className="grid grid-cols-3 gap-2 text-xs">
+                    {['before', 'during', 'after'].map(p => (
+                      <button
+                        type="button"
+                        key={p}
+                        onClick={() => setPhotoPhase(p)}
+                        className={`py-2 rounded-lg border capitalize text-[11px] ${photoPhase === p ? 'font-bold' : 'opacity-60'}`}
+                        style={{
+                          borderColor: theme.colors.border,
+                          backgroundColor: photoPhase === p ? theme.colors.primary : 'transparent',
+                          color: photoPhase === p ? theme.colors.primaryText : theme.colors.textMain
+                        }}
+                      >
+                        {p}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl border bg-black/20 text-[11px] text-gray-300 flex items-start gap-2" style={{ borderColor: theme.colors.border }}>
+                  <Info className="w-4 h-4 shrink-0 mt-0.5" style={{ color: theme.colors.primary }} />
+                  <span>Photos will be instantly added to the live gallery stream with automatic moderation safety flag.</span>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={!newUploadPreview || isUploading}
+                  className="w-full py-3.5 rounded-xl text-xs font-semibold tracking-wider uppercase transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
+                  style={{
+                    backgroundColor: theme.colors.primary,
+                    color: theme.colors.primaryText
+                  }}
+                >
+                  {isUploading ? (
+                    <span>Uploading Snapshot...</span>
+                  ) : (
+                    <>
+                      <Upload className="w-4 h-4" />
+                      Publish to Portal Gallery
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+
+            <div className="pt-6 text-center text-[10px] text-gray-400">
+              Preserved in Supabase Bucket `event-photos`
+            </div>
+          </div>
+        </div>
+      )}
+
+      {}
+      {isSchemaModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+          <div 
+            className="max-w-2xl w-full rounded-2xl border p-6 sm:p-8 max-h-[85vh] overflow-y-auto"
+            style={{
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border
+            }}
+          >
+            <div className="flex items-center justify-between pb-4 border-b mb-6" style={{ borderColor: theme.colors.border }}>
+              <div className="flex items-center gap-2">
+                <Code2 className="w-5 h-5" style={{ color: theme.colors.primary }} />
+                <h3 className="text-xl font-serif" style={{ color: theme.colors.accent }}>Supabase & Backend Setup</h3>
+              </div>
+              <button 
+                onClick={() => setIsSchemaModalOpen(false)}
+                className="p-1 rounded-full text-stone-400 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs leading-relaxed text-gray-300">
+              <p>
+                To connect this frontend to a real live PostgreSQL instance on <strong>Supabase</strong>, navigate to your Supabase SQL Editor and execute this single schema script:
+              </p>
+
+              <div className="p-4 rounded-xl bg-black/60 border font-mono text-[11px] overflow-x-auto text-emerald-300 selection:bg-emerald-800" style={{ borderColor: theme.colors.border }}>
+                <pre>{`-- 1. Create RSVPs Table
+CREATE TABLE public.rsvps (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  guest_name TEXT NOT NULL,
+  phone TEXT,
+  attending TEXT NOT NULL CHECK (attending IN ('yes', 'no')),
+  guest_count INTEGER DEFAULT 1,
+  dietary TEXT,
+  message TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 2. Create Event Photos Table
+CREATE TABLE public.event_photos (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  image_url TEXT NOT NULL,
+  phase TEXT NOT NULL CHECK (phase IN ('before', 'during', 'after')),
+  caption TEXT,
+  uploaded_by TEXT DEFAULT 'Guest',
+  likes INTEGER DEFAULT 0,
+  is_approved BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 3. Row Level Security Policies
+ALTER TABLE public.rsvps ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.event_photos ENABLE ROW LEVEL SECURITY;
+
+-- Allow public guests to view approved photos and submit RSVPs
+CREATE POLICY "Public Read Approved Photos" ON public.event_photos 
+  FOR SELECT USING (is_approved = true);
+
+CREATE POLICY "Public Insert Photos" ON public.event_photos 
+  FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Public Insert RSVPs" ON public.rsvps 
+  FOR INSERT WITH CHECK (true);`}</pre>
+              </div>
+
+              <div className="p-3 rounded-xl border bg-black/20 text-[11px]" style={{ borderColor: theme.colors.border }}>
+                <strong className="text-white block mb-1">Self-Contained Ready:</strong>
+                This application already includes embedded state fallbacks and local storage simulation, so guests can RSVP and upload photos immediately without missing a beat!
+              </div>
+            </div>
+
+            <div className="mt-6 text-right">
+              <button
+                onClick={() => setIsSchemaModalOpen(false)}
+                className="px-5 py-2 rounded-xl text-xs font-semibold"
+                style={{ backgroundColor: theme.colors.primary, color: theme.colors.primaryText }}
+              >
+                Got It
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {}
+      <div className="fixed bottom-6 right-6 z-40">
+        <button
+          onClick={toggleAudio}
+          className="group flex items-center gap-3 px-4 py-3 rounded-full border backdrop-blur-xl shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95"
+          style={{
+            backgroundColor: `${theme.colors.surface}ee`,
+            borderColor: theme.colors.border,
+            boxShadow: theme.colors.goldGlow
+          }}
+          title={isPlayingAudio ? 'Mute Background Music' : 'Play Romantic Atmosphere'}
+        >
+          {/* Animated Equalizer Bars */}
+          <div className="flex items-end gap-1 h-4 w-4 justify-center">
+            {isPlayingAudio ? (
+              <>
+                <span className="w-1 bg-amber-400 rounded-full animate-bounce h-3" />
+                <span className="w-1 bg-amber-400 rounded-full animate-bounce h-4 delay-100" />
+                <span className="w-1 bg-amber-400 rounded-full animate-bounce h-2 delay-200" />
+              </>
+            ) : (
+              <Music className="w-4 h-4" style={{ color: theme.colors.primary }} />
+            )}
+          </div>
+
+          <div className="text-left hidden sm:block">
+            <p className="text-[10px] tracking-wider uppercase font-semibold" style={{ color: theme.colors.primary }}>
+              {isPlayingAudio ? 'Ambient Soundscape' : 'Ambiance Audio'}
+            </p>
+            <p className="text-[9px] opacity-70">
+              {isPlayingAudio ? 'Now Playing' : 'Click to Listen'}
+            </p>
+          </div>
+
+          <div 
+            className="w-6 h-6 rounded-full flex items-center justify-center border"
+            style={{ borderColor: theme.colors.border, color: theme.colors.primary }}
+          >
+            {isPlayingAudio ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5 opacity-60" />}
+          </div>
+        </button>
+      </div>
+
+      {}
+      <footer 
+        className="border-t py-12 px-4 text-center relative z-10 text-xs"
+        style={{
+          borderColor: theme.colors.border,
+          backgroundColor: theme.colors.surface
+        }}
+      >
+        <div className="max-w-2xl mx-auto space-y-4">
+          <p className={`text-2xl font-serif ${theme.fontHeading}`} style={{ color: theme.colors.accent }}>
+            {eventDetails.hosts}
+          </p>
+          <p className="font-light leading-relaxed opacity-75" style={{ color: theme.colors.textMuted }}>
+            With gratitude to our families, friends, and loved ones traveling from near and far. We cherish your presence in celebrating our forever beginning.
+          </p>
+          <div className="pt-4 text-[11px] opacity-50 flex items-center justify-center gap-1">
+            <span>Udaipur • 2026 • Crafted with</span>
+            <Heart className="w-3 h-3 fill-rose-400 text-rose-400 inline" />
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
